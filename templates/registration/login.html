@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Вход</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:420px;margin:6vh auto;padding:0 16px}
+    form{display:grid;gap:12px}
+    input{padding:10px;border:1px solid #ccc;border-radius:8px;width:100%}
+    button{padding:10px 14px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer}
+    .errorlist{color:#b00020;margin:0 0 8px 0;list-style:none;padding:0;font-size:14px}
+    .msg{background:#f6f7f8;border:1px solid #e5e7eb;padding:10px;border-radius:8px;margin-bottom:12px}
+    a{color:#111}
+  </style>
+</head>
+<body>
+  <h1>Вход</h1>
+
+  {% if form.errors %}
+    <div class="msg">Проверьте логин и пароль.</div>
+  {% endif %}
+  {% if next and user.is_authenticated %}
+    <div class="msg">У вас нет доступа к этой странице.</div>
+  {% endif %}
+
+  <form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    <label>
+      Логин
+      {{ form.username }}
+    </label>
+    <label>
+      Пароль
+      {{ form.password }}
+    </label>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Войти</button>
+  </form>
+
+  <p style="margin-top:12px">
+    <a href="{% url 'logout' %}">Выйти</a>
+  </p>
+</body>
+</html>

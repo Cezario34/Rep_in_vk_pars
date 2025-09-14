@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Ваш VK токен</title></head>
+<body>
+  <h1>Ваш VK токен</h1>
+  {% if error %}
+    <p style="color:red">{{ error }}</p>
+  {% elif token_data %}
+    {% if token_data.access_token %}
+      <input value="{{ token_data.access_token }}" readonly style="width:100%">
+      <p>user_id = {{ token_data.user_id }}<br>
+         expires_in = {{ token_data.expires_in }}</p>
+    {% else %}
+      <p style="color:red">Ошибка: {{ token_data.error }} {{ token_data.error_description }}</p>
+    {% endif %}
+  {% else %}
+    <p>Ожидаем данные...</p>
+  {% endif %}
+</body>
+</html>
+

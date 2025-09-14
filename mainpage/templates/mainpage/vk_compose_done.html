@@ -1,0 +1,17 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Пост сформирован</title>
+<style>
+  body{font-family:system-ui,Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 16px}
+  pre{white-space:pre-wrap;background:#f7f7f7;padding:12px;border-radius:8px}
+  .ok{background:#eaffea;border:1px solid #bde5bd;padding:10px;border-radius:8px;margin-bottom:12px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#2563eb;color:#fff;text-decoration:none}
+  .btn:hover{background:#1e40af}
+</style>
+
+<h1>Пост сформирован</h1>
+
+<div class="ok">
+  Данные приняты, рассылка выполнена.
+  <a class="btn" href="{% url 'vk_report_download' %}">Скачать отчёт (Excel)</a>
+</div>

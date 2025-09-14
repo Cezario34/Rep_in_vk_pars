@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>VK: токен и подготовка поста</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f3f7ff;
+      --card:#fff;
+      --border:#dbeafe;
+      --text:#0f172a;
+      --muted:#6b7280;
+      --primary:#2563eb;
+      --primary-hover:#1e40af;
+      --warn-bg:#fff8db;
+      --warn-border:#ffe08a;
+    }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      background:linear-gradient(180deg, var(--bg), #fff 65%);
+      color:var(--text);
+      font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    /* Узкий контейнер по центру */
+    .container{
+      max-width:760px;
+      margin:40px auto;
+      padding:0 16px;
+    }
+
+    h1{ margin:0 0 16px; }
+    h2{ margin:28px 0 12px; }
+
+    .warn{
+      background:var(--warn-bg);
+      border:1px solid var(--warn-border);
+      padding:10px; border-radius:10px; margin-bottom:14px;
+    }
+    .muted{ color:var(--muted); font-size:12px; }
+
+    code{
+      user-select:all; word-break:break-word;
+      background:#f6f8fa; padding:10px; border-radius:10px; display:block;
+      border:1px solid #e5e7eb;
+    }
+
+    /* Карточка формы */
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 2px 10px rgba(37,99,235,.06);
+    }
+
+    /* Поля — аккуратные */
+    .field{ margin-bottom:14px; }
+    .label{ font-size:13px; color:#374151; margin-bottom:6px; display:block; }
+
+    input[type="text"], input[type="url"], textarea, select{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid #c7ddff;
+      border-radius:10px;
+      background:#fff;
+      outline:none;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    textarea{ resize:vertical; min-height:120px; }
+    input:focus, textarea:focus, select:focus{
+      border-color:#93c5fd;
+      box-shadow:0 0 0 3px rgba(147,197,253,.35);
+    }
+    .errors{ color:#b00020; font-size:13px; margin-top:6px; }
+
+    /* Две небольшие колонки для низа формы (день + короткая ссылка) */
+    .row{ display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media (min-width: 700px){
+      .row{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .btn{
+      margin-top:6px; padding:10px 14px; border:0; border-radius:10px;
+      cursor:pointer; background:var(--primary); color:#fff;
+    }
+    .btn:hover{ background:var(--primary-hover); }
+
+    pre{
+      white-space:pre-wrap; background:#f7f9ff;
+      padding:12px; border-radius:10px; border:1px solid var(--border);
+      font:12px/1.4 ui-monospace,monospace; margin-top:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Ваш VK токен</h1>
+
+    {% if error %}
+      <div class="warn">{{ error }}</div>
+      <p><a href="{% url 'vk_login' %}">Перейти к /vk-login/</a></p>
+    {% elif access_token %}
+      <p>Скопируйте токен (если нужно увидеть):</p>
+      <code id="tok">{{ access_token }}</code>
+      <button id="copy" class="btn">Скопировать</button>
+      <p class="muted">Рекомендуется хранить токен на сервере и не светить его в UI. Здесь он выведен только для отладки.</p>
+      <script>
+        document.getElementById('copy').onclick = async () => {
+          const t = document.getElementById('tok').textContent.trim();
+          try { await navigator.clipboard.writeText(t); alert("Скопировано!"); }
+          catch {
+            const el = document.getElementById('tok');
+            const r = document.createRange(); r.selectNodeContents(el);
+            const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+            document.execCommand('copy'); s.removeAllRanges();
+            alert("Скопировано!");
+          }
+        };
+      </script>
+    {% else %}
+      <div class="warn">Не удалось получить токен. Повторите вход.</div>
+      <p><a href="{% url 'vk_login' %}">Перейти к /vk-login/</a></p>
+    {% endif %}
+
+    {% if diag %}
+      <h3>Диагностика</h3>
+      <pre>{{ diag|safe }}</pre>
+    {% endif %}
+
+    <hr style="margin:28px 0">
+    <h2>Подготовка поста</h2>
+
+    <div class="card">
+      <form method="post" action="{% url 'vk_compose' %}">
+        {% csrf_token %}
+
+        <div class="field">
+          <label class="label">Ссылка на обложку</label>
+          {{ form.cover_url }}
+          {% if form.cover_url.errors %}<div class="errors">{{ form.cover_url.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label class="label">Имя автора</label>
+          {{ form.author_name }}
+          {% if form.author_name.errors %}<div class="errors">{{ form.author_name.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label class="label">Название книги</label>
+          {{ form.book_title }}
+          {% if form.book_title.errors %}<div class="errors">{{ form.book_title.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label class="label">Жанр</label>
+          {{ form.genre }}
+          {% if form.genre.errors %}<div class="errors">{{ form.genre.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label class="label">Статус</label>
+          {{ form.status }}
+          {% if form.status.errors %}<div class="errors">{{ form.status.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="field">
+          <label class="label">Аннотация <span class="muted">(до 3000 символов)</span></label>
+          {{ form.annotation }}
+          <div class="muted" id="ann-counter">0/3000</div>
+          {% if form.annotation.errors %}<div class="errors">{{ form.annotation.errors|join:", " }}</div>{% endif %}
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label class="label">Выбор дня для отправки</label>
+            {{ form.send_day }}
+            {% if form.send_day.errors %}<div class="errors">{{ form.send_day.errors|join:", " }}</div>{% endif %}
+          </div>
+
+          <div class="field">
+            <label class="label">Короткая ссылка ВК <span class="muted">формат: https://vk.cc/…</span></label>
+            {{ form.vk_short_url }}
+            {% if form.vk_short_url.errors %}<div class="errors">{{ form.vk_short_url.errors|join:", " }}</div>{% endif %}
+          </div>
+        </div>
+
+        <button type="submit" class="btn">Сформировать пост</button>
+      </form>
+    </div>
+
+    <script>
+      // Счётчик аннотации + автосохранение в localStorage
+      const ann = document.querySelector('textarea[name="annotation"]');
+      const counter = document.getElementById('ann-counter');
+      const KEY = "vk_compose_autosave";
+
+      function updateCounter(){
+        const len = (ann?.value || "").length;
+        if (counter) counter.textContent = `${len}/3000`;
+      }
+      function saveForm(){
+        const data = {
+          cover_url: document.querySelector('input[name="cover_url"]')?.value || "",
+          author_name: document.querySelector('input[name="author_name"]')?.value || "",
+          book_title: document.querySelector('input[name="book_title"]')?.value || "",
+          genre: document.querySelector('input[name="genre"]')?.value || "",
+          status: document.querySelector('select[name="status"]')?.value || "",
+          annotation: ann?.value || "",
+          send_day: (document.querySelector('input[name="send_day"]:checked')||{}).value || "",
+          vk_short_url: document.querySelector('input[name="vk_short_url"]')?.value || "",
+        };
+        localStorage.setItem(KEY, JSON.stringify(data));
+      }
+      function restoreForm(){
+        try {
+          const data = JSON.parse(localStorage.getItem(KEY) || "{}");
+          for (const [k,v] of Object.entries(data)){
+            const el = document.querySelector(`[name="${k}"]`);
+            if (!el) continue;
+            if (el.type === "radio"){
+              const r = document.querySelector(`[name="${k}"][value="${v}"]`);
+              if (r) r.checked = true;
+            } else {
+              el.value = v || "";
+            }
+          }
+        } catch {}
+        updateCounter();
+      }
+
+      document.querySelector("form")?.addEventListener("input", () => { saveForm(); updateCounter(); });
+      restoreForm();
+    </script>
+  </div>
+</body>
+</html>

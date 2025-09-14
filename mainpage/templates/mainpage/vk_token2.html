@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Ваш VK токен</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:700px;margin:40px auto;padding:0 16px}
+    code{user-select:all;word-break:break-all;background:#f6f8fa;padding:10px;border-radius:8px;display:block}
+    button{margin-top:10px;padding:8px 12px;border:0;border-radius:10px;cursor:pointer}
+    .warn{background:#fff3cd;border:1px solid #ffeeba;padding:10px;border-radius:8px}
+    .muted{color:#666;font-size:12px}
+    pre{white-space:pre-wrap;background:#f7f7f7;padding:10px;border-radius:8px;margin-top:12px;font:12px/1.4 ui-monospace,monospace}
+  </style>
+</head>
+<body>
+  <h1>Ваш VK токен</h1>
+
+  {% if error %}
+    <div class="warn">{{ error }}</div>
+    <p><a href="/vk-login/">Перейти к /vk-login/</a></p>
+  {% elif access_token %}
+    <p>Скопируйте токен:</p>
+    <code id="tok">{{ access_token }}</code>
+    <button id="copy">Скопировать</button>
+    <p class="muted">Токен не сохраняется на сервере и не попадает в URL (кроме кода авторизации, который одноразовый).</p>
+    <script>
+      document.getElementById('copy').onclick = async () => {
+        const t = document.getElementById('tok').textContent;
+        try { await navigator.clipboard.writeText(t); alert("Скопировано!"); }
+        catch {
+          const el = document.getElementById('tok');
+          const r = document.createRange(); r.selectNodeContents(el);
+          const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+          document.execCommand('copy'); s.removeAllRanges();
+          alert("Скопировано!");
+        }
+      };
+    </script>
+  {% else %}
+    <div class="warn">Не удалось получить токен.</div>
+    <p><a href="/vk-login/">Перейти к /vk-login/</a></p>
+  {% endif %}
+
+  {% if diag %}
+    <h3>Диагностика</h3>
+    <pre>{{ diag|safe }}</pre>
+  {% endif %}
+</body>
+</html>
+

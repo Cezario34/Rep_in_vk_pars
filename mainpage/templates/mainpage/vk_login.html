@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Вход через VK ID</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://unpkg.com/@vkid/sdk@2.6.1/dist-sdk/umd/index.js"></script>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;max-width:680px;margin:40px auto;padding:0 16px}
+    button{padding:10px 16px;border:0;border-radius:10px;cursor:pointer}
+    #log{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;background:#f7f7f7;padding:12px;border-radius:8px;margin-top:12px}
+  </style>
+</head>
+<body>
+  <h1>Войти через VK ID</h1>
+  <p>После авторизации вы вернётесь на страницу с токеном.</p>
+
+  <button id="vk_auth_btn">Войти через VK ID</button>
+  <div id="log"></div>
+
+  <script>
+    const APP_ID = {{ VK_APP_ID|safe }};
+    const REDIRECT = "{{ VK_REDIRECT_URL }}";
+
+    const logEl = document.getElementById('log');
+    const log = (...a) => { console.log(...a); logEl.textContent += a.map(x=>typeof x==='object'?JSON.stringify(x,null,2):String(x)).join(' ')+"\n"; };
+
+    const base64url = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const sha256 = async (t) => crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
+    const genRnd = (len=64) => base64url(crypto.getRandomValues(new Uint8Array(len)));
+
+    async function preparePkceOnServer() {
+      const code_verifier = genRnd(64);
+      const code_challenge = base64url(await sha256(code_verifier));
+      const state = genRnd(32);
+
+      // 1) кладем verifier/state в СЕССИЮ (сервер)
+      await fetch("/vk-store-pkce/", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ code_verifier, state }),
+        credentials: "include"
+      });
+
+      return { code_challenge, state };
+    }
+
+    (async function init(){
+      if (!window.VKIDSDK) { log("❌ VKIDSDK не найден"); return; }
+      const VKID = window.VKIDSDK;
+      log("✅ SDK OK, redirect flow");
+
+      const { code_challenge, state } = await preparePkceOnServer();
+      log("PKCE готово (server session):", { state, code_challenge: code_challenge.slice(0,10)+"…" });
+
+      VKID.Config.init({
+        app: APP_ID,
+        redirectUrl: REDIRECT,
+        state,
+        scope: "phone email",
+        codeChallenge: code_challenge,
+        responseMode: VKID.ConfigResponseMode.Redirect
+      });
+
+      document.getElementById("vk_auth_btn").onclick = () => {
+        log("Открываем VK ID (Redirect)…");
+        VKID.Auth.login(); // после логина вернет на REDIRECT
+      };
+    })();
+  </script>
+</body>
+</html>
+
+

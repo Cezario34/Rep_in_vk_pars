@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VK Рассылка — Добро пожаловать</title>
+  <meta name="description" content="Минималистичная страница подписки на рассылку во ВКонтакте." />
+  <style>
+    :root{
+      --bg:#f7f8fc;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --primary:#0077ff; /* VK blue */
+      --primary-2:#085dd6;
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.06);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; background:var(--bg); color:var(--text)}
+    .wrap{max-width:620px; margin:0 auto; padding:28px}
+
+    .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:26px}
+
+    .brand{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+    .vk{width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:var(--primary); color:#fff; font-weight:700}
+
+    h1{margin:6px 0 8px; font-size:28px; line-height:1.2; letter-spacing:-.2px}
+    p{margin:0; color:var(--muted)}
+
+    .cta{margin-top:18px}
+    .btn{display:inline-block; padding:12px 16px; border-radius:12px; background:var(--primary); color:#fff; text-decoration:none; font-weight:700; transition:.2s transform, .2s background}
+    .btn:hover{background:var(--primary-2); transform:translateY(-1px)}
+
+    .note{margin-top:12px; font-size:13px; color:var(--muted)}
+
+    footer{margin-top:18px; text-align:center; color:var(--muted); font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" aria-labelledby="title">
+      <div class="brand">
+        <div class="vk">VK</div>
+        <strong>VK Рассылки</strong>
+      </div>
+      <h1 id="title">Привет! Подпишись на короткие и полезные обновления ✨</h1>
+      <p>Анонсы, бонусы и лучшие материалы — максимум 1–2 раза в неделю, без спама.</p>
+      <div class="cta">
+        <a class="btn" href="https://vk.ru/club217092329" target="_blank" rel="noopener">Подписаться во ВКонтакте</a>
+      </div>
+      <div class="note">Можно отписаться в любой момент одним кликом внутри сообщения.</div>
+        <div class="cta">
+      <a class="btn" href="{% url 'vk_login' %}" target="_blank" rel="noopener">Перейти к отправке постов по группам</a>
+        </div>
+    </section>
+
+    <footer>© VK Рассылки</footer>
+  </main>
+</body>
+</html>
