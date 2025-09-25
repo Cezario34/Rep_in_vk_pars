@@ -104,10 +104,6 @@
       <div class="warn">{{ error }}</div>
       <p><a href="{% url 'vk_login' %}">Перейти к /vk-login/</a></p>
     {% elif access_token %}
-      <p>Скопируйте токен (если нужно увидеть):</p>
-      <code id="tok">{{ access_token }}</code>
-      <button id="copy" class="btn">Скопировать</button>
-      <p class="muted">Рекомендуется хранить токен на сервере и не светить его в UI. Здесь он выведен только для отладки.</p>
       <script>
         document.getElementById('copy').onclick = async () => {
           const t = document.getElementById('tok').textContent.trim();
@@ -126,10 +122,6 @@
       <p><a href="{% url 'vk_login' %}">Перейти к /vk-login/</a></p>
     {% endif %}
 
-    {% if diag %}
-      <h3>Диагностика</h3>
-      <pre>{{ diag|safe }}</pre>
-    {% endif %}
 
     <hr style="margin:28px 0">
     <h2>Подготовка поста</h2>

@@ -1,15 +1,26 @@
-# Django
 __pycache__/
 *.py[cod]
-db.sqlite3
-/static/
-/media/
-/staticfiles/
-/collectstatic/
-/.env
-*.env
-.vscode/
-.idea/
-.venv/
-venv/
+*.sqlite3
 *.log
+*.pot
+*.py,cover
+.coverage
+htmlcov/
+
+# Envs & secrets
+.env
+.env.* 
+*.pem
+*.key
+
+# Virtualenv
+venv/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Django static build output (если собираешь collectstatic сюда)
+staticfiles/
+media/

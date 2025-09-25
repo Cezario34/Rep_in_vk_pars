@@ -19,7 +19,7 @@ class CampaignForm(forms.Form):
     cover_url = forms.URLField(
         label="Ссылка на обложку",
         required=True,
-        widget=forms.URLInput(attrs={"placeholder": "https://...jpg", "class": "input"})
+        widget=forms.URLInput(attrs={"class": "input"})
     )
     author_name = forms.CharField(
         label="Имя автора",

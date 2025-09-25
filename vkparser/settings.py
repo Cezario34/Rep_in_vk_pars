@@ -16,7 +16,7 @@ import os
 VK_APP_ID       = os.getenv("VK_APP_ID")
 VK_SCOPE        = os.getenv("VK_SCOPE", "groups,wall,photos")
 VK_API_VERSION  = os.getenv("VK_API_VERSION", "5.199")
-VK_REDIRECT_URI = os.getenv("VK_REDIRECT_URI", "https://ladaorfeeva.ru/vk-token.html")
+VK_REDIRECT_URI = os.getenv("VK_REDIRECT_URL", "https://ladaorfeeva.ru/vkstart/vk-token/")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -133,7 +133,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 

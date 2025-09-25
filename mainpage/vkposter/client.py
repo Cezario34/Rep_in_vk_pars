@@ -89,27 +89,23 @@ class VkPoster:
             return f"❌ Ошибка при проверке подписки: {e}"
 
     def get_photo_link(self):
-        PHOTO_RE = re.compile(r'photo-?\d+_\d+')
+        logger.info("Attachment raw: %r", self.attachment)
+        PHOTO_RE = re.compile(r'(photo-?\d+_\d+)')
         if not self.attachment:
+            logger.info("Attachment is empty/None")
             return None
 
         s = self.attachment.strip()
+        for i in range(2):  # максимум дважды декодируем
+            m = PHOTO_RE.search(s)
+            if m:
+                logger.info("Matched token on pass %d: %s", i, m.group(1))
+                return m.group(1)
+            s = unquote(s)
+            logger.info("After unquote(%d): %r", i + 1, s)
 
-        # 1) сначала по-быстрому (вдруг строка уже 'photo-...' или простая ссылка)
-        m = PHOTO_RE.search(s)
-        if m:
-            return m.group(0)
-
-        # 2) декодируем %2F и прочее, пробуем снова (иногда закодировано дважды)
-        s = unquote(s)
-        m = PHOTO_RE.search(s)
-        if m:
-            return m.group(0)
-
-        s = unquote(s)
-        m = PHOTO_RE.search(s)
-        return m.group(0) if m else None
-
+        logger.info("No photo token found")
+        return None
     def post_to_group(self, group_url: str, message: str, ensure_join: bool = True) -> Tuple[str, str]:
         """
         Делает пост в одну группу.

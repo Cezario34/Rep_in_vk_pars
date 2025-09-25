@@ -19,7 +19,7 @@ from sendonce.logic import has_attempt, consume_attempt
 
 # === настройки вашего приложения VK ID ===
 VK_APP_ID = getattr(settings, "VK_APP_ID", 54138257)  # подставьте свой
-VK_REDIRECT_URL = getattr(settings, "VK_REDIRECT_URL", "https://ladaorfeeva.ru/vk-token/")
+VK_REDIRECT_URL = getattr(settings, "VK_REDIRECT_URL", "https://ladaorfeeva.ru/vkstart/vk-token/")
 # Эндпоинт обмена кода на токены. Для VK ID как правило oauth2/token:
 VK_TOKEN_URLS = [
     "https://id.vk.ru/oauth2/auth",
@@ -198,12 +198,9 @@ def vk_compose_view(request):  # NEW
             "access_token": None, "error": "В файле нет ссылок на группы.", "form": form
         }, status=400)
 
-    poster = VkPoster(token=token, pause_seconds=7.0, attachment=None)
+    attachment_raw=cd.get("cover_url")
+    poster = VkPoster(token=token, pause_seconds=7.0, attachment=attachment_raw)
     results = poster.post_many(group_urls, message, ensure_join=True)
-    for r in results:
-        ok_post = str(r.get("status", "")).startswith("✅")
-        ok_sub = str(r.get("subscription", "")).startswith(("✅", "🔁", "—"))
-        r["ok"] = ok_post and ok_sub
 
     request.session["vk_last_results"] = results
     request.session["vk_last_payload"] = cd
@@ -228,13 +225,6 @@ def vk_report_download(request):
 
     df = pd.DataFrame(results)
 
-    # если по какой-то причине 'ok' нет — вычислим на лету
-    if "ok" not in df.columns:
-        ok_post = df["status"].astype(str).str.startswith("✅")
-        ok_sub  = df["subscription"].astype(str).str.startswith(("✅","🔁","—"))
-        df["ok"] = ok_post & ok_sub
-
-    df = df[df["ok"] == True].drop(columns=["ok"], errors="ignore")
 
     # собираем Excel в память
     buf = BytesIO()

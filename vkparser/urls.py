@@ -20,9 +20,10 @@ from django.views.defaults import page_not_found
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
+    path('', include('sendonce.urls')),
+
     path('admin/', admin.site.urls),
     path('vkstart/', include('mainpage.urls')),
-    path('', include('sendonce.urls')),
     path("login/",  auth_views.LoginView.as_view(template_name="registration/login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 ]

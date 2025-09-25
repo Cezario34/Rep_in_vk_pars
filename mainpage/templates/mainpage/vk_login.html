@@ -35,7 +35,7 @@
       const state = genRnd(32);
 
       // 1) кладем verifier/state в СЕССИЮ (сервер)
-      await fetch("/vk-store-pkce/", {
+      await fetch("/vkstart/vk-store-pkce/", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ code_verifier, state }),
@@ -48,27 +48,28 @@
     (async function init(){
       if (!window.VKIDSDK) { log("❌ VKIDSDK не найден"); return; }
       const VKID = window.VKIDSDK;
-      log("✅ SDK OK, redirect flow");
+      // log("✅ SDK OK, redirect flow");
 
       const { code_challenge, state } = await preparePkceOnServer();
-      log("PKCE готово (server session):", { state, code_challenge: code_challenge.slice(0,10)+"…" });
+      // log("PKCE готово (server session):", { state, code_challenge: code_challenge.slice(0,10)+"…" });
 
       VKID.Config.init({
         app: APP_ID,
         redirectUrl: REDIRECT,
         state,
-        scope: "phone email",
+        scope: "wall",
         codeChallenge: code_challenge,
         responseMode: VKID.ConfigResponseMode.Redirect
       });
 
       document.getElementById("vk_auth_btn").onclick = () => {
-        log("Открываем VK ID (Redirect)…");
+        // log("Открываем VK ID (Redirect)…");
         VKID.Auth.login(); // после логина вернет на REDIRECT
       };
     })();
   </script>
 </body>
 </html>
+
 
 
