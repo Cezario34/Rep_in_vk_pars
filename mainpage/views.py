@@ -16,6 +16,13 @@ from .utils import load_groups_from_excel
 from .vkposter.client import VkPoster, build_post_text
 log = logging.getLogger(__name__)
 from sendonce.logic import has_attempt, consume_attempt
+from django.http import FileResponse, HttpResponse
+from io import BytesIO
+import pandas as pd
+from django.utils.timezone import now
+from sendonce.logic import consume_attempt, has_attempt
+from mailing.jobs import start_mailing_job, get_job
+from mailing.post_text import build_post_text
 
 # === настройки вашего приложения VK ID ===
 VK_APP_ID = getattr(settings, "VK_APP_ID", 54138257)  # подставьте свой
@@ -148,73 +155,40 @@ EXCEL_MAP = {
 
 
 @require_POST  # NEW
-@login_required  # NEW (если нужно требовать логин)
-def vk_compose_view(request):  # NEW
-    """
-    Принимаем заполненную форму.
-    Пока просто показываем подтверждение и payload.
-    Позже сюда подвяжем реальную отправку в VK.
-    """
+@login_required
+def vk_compose_view(request):
     form = CampaignForm(request.POST)
+    token = request.session.get("access_token") or request.POST.get("token")
     if not form.is_valid():
-        # Вернуть пользователя на ту же страницу с ошибками
+        return render(request, "mainpage/vk_token.html", {"form": form, "error": None})
+
+    if not token:
         return render(request, "mainpage/vk_token.html", {
-            "access_token": None,  # токен можно не светить повторно
-            "error": None,
-            "diag": None,
-            "form": form,  # покажем ошибки валидации
-        }, status=400)
-    token = request.session.get('access_token')
-    # if not token:
-    #     return render(request, "mainpage/vk_token.html", {
-    #         "access_token": None, "error": "Нет токена в сессии. Пройдите вход через VK ID ещё раз.", "form": form
-    #     }, status=401)
-    if not consume_attempt(request.user):                      # NEW
+            "form": form,
+            "error": "Нет VK-токена. Войдите через VK ID или вставьте токен.",
+        })
+
+    if not consume_attempt(request.user):
         return render(request, "mainpage/vk_token.html", {
-            "access_token": None,
+            "form": None,
             "error": "Попытки исчерпаны. Обратитесь к администратору.",
-            "form": None,  # форму не показываем
-        }, status=403)
+        })
 
     cd = form.cleaned_data
-    message = build_post_text(
+    job_id = start_mailing_job(
         author_name=cd["author_name"],
-        title=cd["book_title"],
-        genre=cd["genre"],
+        book_title=cd["book_title"],
+        age_rating=cd.get("age_rating") or cd.get("genre", ""),
         annotation=cd["annotation"],
-        short_link=cd["vk_short_url"],
+        book_links=cd["vk_short_url"],
+        token=token,
+        day=cd["send_day"],
+
+        attachment=(cd.get("cover_url") or "").strip() or None,
+        groups_dir="group_target",
     )
+    return redirect("send_progress", job_id=job_id)
 
-    day_key = cd["send_day"]
-    try:
-        group_urls = load_groups_from_excel(day_key)
-    except Exception as e:
-        return render(request, "mainpage/vk_token.html", {
-            "access_token": None, "error": f"Не удалось получить список групп: {e}", "form": form
-        }, status=400)
-
-    if not group_urls:
-        return render(request, "mainpage/vk_token.html", {
-            "access_token": None, "error": "В файле нет ссылок на группы.", "form": form
-        }, status=400)
-
-    attachment_raw=cd.get("cover_url")
-    poster = VkPoster(token=token, pause_seconds=7.0, attachment=attachment_raw)
-    results = poster.post_many(group_urls, message, ensure_join=True)
-
-    request.session["vk_last_results"] = results
-    request.session["vk_last_payload"] = cd
-    return render(request, "mainpage/vk_compose_done.html", {
-        "ok": True,
-        "payload": cd,
-        "results": results,
-        "groups_count": len(group_urls),
-    })
-
-from django.http import FileResponse, HttpResponse
-from io import BytesIO
-import pandas as pd
-from django.utils.timezone import now
 
 @login_required
 def vk_report_download(request):
@@ -241,3 +215,28 @@ def vk_report_download(request):
         filename=filename,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+@login_required
+def send_progress(request, job_id):
+    if not get_job(job_id):
+        return HttpResponse("Задача не найдена", status=404)
+    return render(request, "mainpage/progress.html", {"job_id": job_id})
+
+
+@login_required
+def send_status(request, job_id):
+    job = get_job(job_id)
+    if not job:
+        return JsonResponse({"ok": 0, "err": 0, "processed": 0, "total": 0, "done": True, "failed": True, "message": "Нет задачи", "current": ""})
+    return JsonResponse(job)
+
+
+@login_required
+def send_report(request, job_id):
+    job = get_job(job_id)
+    if not job or not job.get("report_name"):
+        return HttpResponse("Отчёт ещё не готов", status=404)
+    path = Path("group_target") / job["report_name"]
+    if not path.exists():
+        return HttpResponse("Файл не найден", status=404)
+    return FileResponse(path.open("rb"), as_attachment=True, filename=job["report_name"])

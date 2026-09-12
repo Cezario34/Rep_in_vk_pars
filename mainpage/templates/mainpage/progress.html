@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Идёт рассылка</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; }
+    .warn { background: #fff4d6; padding: 12px 14px; border-radius: 10px; }
+    .ok { color: #0a7; } .err { color: #b00; }
+  </style>
+</head>
+<body>
+  <h1 id="title">Не прерывайте, идёт рассылка</h1>
+  <p class="warn" id="hint">Не закрывайте вкладку и не запускайте вторую рассылку.</p>
+  <p>Отправлено успешно: <b class="ok" id="ok">0</b></p>
+  <p>Ошибок: <b class="err" id="err">0</b></p>
+  <p>Обработано: <span id="processed">0</span> из <span id="total">0</span></p>
+  <p id="message">Запуск…</p>
+  <p id="current"></p>
+  <p id="download" style="display:none">
+    <a id="download-link" href="#">Скачать Excel с результатами</a>
+  </p>
+  <p><a href="/send">Вернуться к форме</a></p>
+  <script>
+    const jobId = "{{ job_id }}";
+    async function tick() {
+    const data = await (await fetch("/vkstart/status/" + jobId)).json();
+    ok.textContent = data.ok;
+      err.textContent = data.err;
+      processed.textContent = data.processed;
+      total.textContent = data.total;
+      message.textContent = data.message;
+      current.textContent = data.current || "";
+      if (data.done) {
+        title.textContent = data.failed ? "Рассылка остановилась" : "Рассылка завершена";
+        hint.style.display = "none";
+        if (!data.failed) {
+          const link = document.getElementById("download-link");
+          link.href = "/vkstart/report/" + jobId;
+          document.getElementById("download").style.display = "block";
+        }
+        return;
+      }
+      setTimeout(tick, 1000);
+    }
+    tick();
+  </script>
+</body>
+</html>

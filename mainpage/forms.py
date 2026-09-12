@@ -8,12 +8,17 @@ STATUS_CHOICES = [
 ]
 
 DAY_CHOICES = [
-    ("day1", "День 1"),
-    ("day2", "День 2"),
-    ("day3", "День 3"),
-    ("day4", "Тестовый"),
-    ("СЛР", "СЛР"),
+    (0, "Тестовый"),
+    (1, "День 1"),
+    (2, "День 2"),
+    (3, "День 3"),
+    (4, "День 4"),
+    (5, "День 5"),
+    (10, "СЛР"),
+    (50, "СЛР 2"),
 ]
+send_day = forms.TypedChoiceField(choices=DAY_CHOICES, coerce=int)
+
 
 class CampaignForm(forms.Form):
     cover_url = forms.URLField(
