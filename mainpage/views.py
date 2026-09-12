@@ -143,7 +143,7 @@ def vk_token_view(request):
     }
 
     if has_attempt(request.user):
-        ctx["form"] = CampaignForm()
+        ctx["form"] = CampaignForm(user=request.user)
     else:
         ctx["error"] = "У вас нет доступных попыток. Обратитесь к администратору."
 
@@ -160,7 +160,7 @@ EXCEL_MAP = {
 @require_POST
 @login_required
 def vk_compose_view(request):
-    form = CampaignForm(request.POST)
+    form = CampaignForm(request.POST, user=request.user)
     token = request.session.get("access_token") or request.POST.get("token")
     if not form.is_valid():
         return render(request, "mainpage/vk_token.html", {"form": form, "error": None})
@@ -291,7 +291,7 @@ def vk_dev_token(request):
     request.session["access_token"] = raw
     ctx = {"access_token": raw, "error": None, "diag": {"debug_token": True}}
     if has_attempt(request.user):
-        ctx["form"] = CampaignForm()
+        ctx["form"] = CampaignForm(user=request.user)
     else:
         ctx["error"] = "У вас нет доступных попыток. Обратитесь к администратору."
     return render(request, "mainpage/vk_token.html", ctx)

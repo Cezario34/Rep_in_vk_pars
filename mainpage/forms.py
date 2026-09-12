@@ -9,6 +9,12 @@ STATUS_CHOICES = [
     ("done", "Завершена"),
 ]
 
+
+USER_DAYS = [
+    (1, "День 1"),
+    (2, "День 2"),
+]
+
 DAY_CHOICES = [
     (0, "Тестовый"),
     (1, "День 1"),
@@ -37,6 +43,7 @@ def extract_vk_photo(value: str) -> str:
 
 
 class CampaignForm(forms.Form):
+
     cover_url = forms.CharField(
         label="Обложка VK",
         required=False,
@@ -101,3 +108,17 @@ class CampaignForm(forms.Form):
             return extract_vk_photo(raw)
         except ValueError as exc:
             raise forms.ValidationError(str(exc))
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is not None and (user.is_staff or user.is_superuser):
+            self.fields["send_day"].choices = DAY_CHOICES
+        else:
+            self.fields["send_day"].choices = USER_DAYS
+
+    def clean_send_day(self):
+        day = self.cleaned_data["send_day"]
+        allowed = {int(value) for value, _ in self.fields["send_day"].choices}
+        if int(day) not in allowed:
+            raise forms.ValidationError("Этот день вам недоступен.")
+        return day
