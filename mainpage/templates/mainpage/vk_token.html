@@ -181,10 +181,14 @@
           </div>
         </div>
 
-        <button type="submit" class="btn">Сформировать пост</button>
+        <button type="submit" class="btn" value="preview">Сформировать пост</button>
       <button type="submit" name="action" value="preview">Показать пост</button>
         <button type="submit" name="action" value="send">Отправить</button>
       </form>
+    {% if preview %}
+      <h2>Так будет выглядеть пост</h2>
+      <pre>{{ preview }}</pre>
+    {% endif %}
     </div>
 
     <script>

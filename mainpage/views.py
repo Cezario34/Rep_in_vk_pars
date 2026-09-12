@@ -210,6 +210,7 @@ def vk_compose_view(request):
         age_rating=cd.get("age_rating") or cd.get("genre", ""),
         annotation=cd["annotation"],
         book_links=cd["vk_short_url"],
+        log_id=log.id,
         token=token,
         day=cd["send_day"],
 

@@ -8,7 +8,8 @@ from pathlib import Path
 from .groups import load_group_urls
 from .poster import VkMailing
 from .service import prepare_post
-
+from .logging_setup import setup_logging
+logger = setup_logging("mailing")
 
 _jobs: dict[str, dict] = {}
 _lock = threading.Lock()
@@ -24,6 +25,21 @@ def _update(job_id: str, **fields) -> None:
     with _lock:
         _jobs[job_id].update(fields)
 
+def _write_log(log_id, **fields):
+    if not log_id:
+        return
+    try:
+        from django.db import close_old_connections
+        from django.utils.timezone import now
+        from sendonce.models import MailingLog
+
+        close_old_connections()
+        if "finished_at" not in fields and fields.get("status") in {"done", "failed"}:
+            fields["finished_at"] = now()
+        MailingLog.objects.filter(pk=log_id).update(**fields)
+    except Exception:
+        logger.exception("Не удалось обновить журнал")
+
 
 def start_mailing_job(
     author_name: str,
@@ -35,6 +51,7 @@ def start_mailing_job(
     day: int,
     attachment: str | None,
     groups_dir: str | Path = "group_target",
+    log_id=None,
 ) -> str:
     job_id = uuid.uuid4().hex[:12]
     with _lock:
@@ -48,7 +65,7 @@ def start_mailing_job(
             "current": "",
             "message": "Рассылка запускается",
             "report_name": "",
-            }
+        }
 
     thread = threading.Thread(
         target=_run_job,
@@ -63,6 +80,7 @@ def start_mailing_job(
             "day": day,
             "attachment": attachment,
             "groups_dir": groups_dir,
+            "log_id": log_id,
         },
         daemon=True,
     )
@@ -81,6 +99,7 @@ def _run_job(
     day: int,
     attachment: str | None,
     groups_dir: str | Path,
+    log_id=None,
 ) -> None:
     try:
         text = prepare_post(
@@ -93,9 +112,12 @@ def _run_job(
         frame = load_group_urls(day, groups_dir)
         urls = list(frame["url"])
         _update(job_id, total=len(urls), message="Не прерывайте, идёт рассылка")
+        _write_log(log_id, total=len(urls), message="Идёт рассылка")
+
         poster = VkMailing(token=token, post_text=text, attachment=attachment)
         ok = err = 0
         rows = []
+        error_lines = []
         for index, url in enumerate(urls, start=1):
             _update(job_id, current=str(url), processed=index - 1)
             row = poster.process_group(url)
@@ -104,6 +126,7 @@ def _run_job(
                 ok += 1
             else:
                 err += 1
+                error_lines.append(f"{url} — {row['status']}")
             _update(job_id, ok=ok, err=err, processed=index, current=str(url))
 
         report_dir = Path(groups_dir)
@@ -118,6 +141,17 @@ def _run_job(
             message="Рассылка завершена",
             current="",
             report_name=report_name,
-            )
+        )
+        _write_log(
+            log_id,
+            total=len(urls),
+            ok=ok,
+            err=err,
+            status="done",
+            message="Завершена",
+            report_name=report_name,
+            errors="\n".join(error_lines),
+        )
     except Exception as exc:
         _update(job_id, done=True, failed=True, message=f"Остановка: {exc}")
+        _write_log(log_id, status="failed", message=str(exc)[:300])
