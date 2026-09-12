@@ -157,7 +157,7 @@ EXCEL_MAP = {
 
 
 
-@require_POST  # NEW
+@require_POST
 @login_required
 def vk_compose_view(request):
     form = CampaignForm(request.POST)
@@ -171,12 +171,6 @@ def vk_compose_view(request):
             "error": "Нет VK-токена. Войдите через VK ID или вставьте токен.",
         })
 
-    if not consume_attempt(request.user):
-        return render(request, "mainpage/vk_token.html", {
-            "form": None,
-            "error": "Попытки исчерпаны. Обратитесь к администратору.",
-        })
-
     cd = form.cleaned_data
     preview = build_post_text(
         author_name=cd["author_name"],
@@ -184,17 +178,23 @@ def vk_compose_view(request):
         age_rating=cd.get("age_rating") or cd.get("genre", ""),
         annotation=cd["annotation"],
         book_links=cd["vk_short_url"],
-        )
+    )
 
     if request.POST.get("action") != "send":
-        return render(
-            request, "mainpage/vk_token.html", {
-                "form": form,
-                "error": None,
-                "preview": preview,
-                "access_token": token,
-                }
-            )
+        return render(request, "mainpage/vk_token.html", {
+            "form": form,
+            "error": None,
+            "preview": preview,
+            "access_token": token,
+        })
+
+    if not consume_attempt(request.user):
+        return render(request, "mainpage/vk_token.html", {
+            "form": form,
+            "preview": preview,
+            "access_token": token,
+            "error": "Попытки исчерпаны. Обратитесь к администратору.",
+        })
 
     log = MailingLog.objects.create(
         user=request.user,
@@ -203,19 +203,18 @@ def vk_compose_view(request):
         day=cd["send_day"],
         status="running",
         message="Запущена",
-        )
+    )
     job_id = start_mailing_job(
         author_name=cd["author_name"],
         book_title=cd["book_title"],
         age_rating=cd.get("age_rating") or cd.get("genre", ""),
         annotation=cd["annotation"],
         book_links=cd["vk_short_url"],
-        log_id=log.id,
         token=token,
         day=cd["send_day"],
-
         attachment=(cd.get("cover_url") or "").strip() or None,
         groups_dir="group_target",
+        log_id=log.id,
     )
     return redirect("send_progress", job_id=job_id)
 
