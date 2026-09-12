@@ -24,6 +24,8 @@ from sendonce.logic import consume_attempt, has_attempt
 from mailing.jobs import start_mailing_job, get_job
 from mailing.post_text import build_post_text
 from pathlib import Path
+from sendonce.models import MailingLog
+
 
 # === настройки вашего приложения VK ID ===
 VK_APP_ID = getattr(settings, "VK_APP_ID", 54138257)  # подставьте свой
@@ -176,6 +178,32 @@ def vk_compose_view(request):
         })
 
     cd = form.cleaned_data
+    preview = build_post_text(
+        author_name=cd["author_name"],
+        book_title=cd["book_title"],
+        age_rating=cd.get("age_rating") or cd.get("genre", ""),
+        annotation=cd["annotation"],
+        book_links=cd["vk_short_url"],
+        )
+
+    if request.POST.get("action") != "send":
+        return render(
+            request, "mainpage/vk_token.html", {
+                "form": form,
+                "error": None,
+                "preview": preview,
+                "access_token": token,
+                }
+            )
+
+    log = MailingLog.objects.create(
+        user=request.user,
+        book_title=cd["book_title"],
+        author_name=cd["author_name"],
+        day=cd["send_day"],
+        status="running",
+        message="Запущена",
+        )
     job_id = start_mailing_job(
         author_name=cd["author_name"],
         book_title=cd["book_title"],
@@ -241,3 +269,29 @@ def send_report(request, job_id):
     if not path.exists():
         return HttpResponse("Файл не найден", status=404)
     return FileResponse(path.open("rb"), as_attachment=True, filename=job["report_name"])
+
+
+@login_required
+def vk_dev_token(request):
+    if not settings.DEBUG:
+        return HttpResponse("Not found", status=404)
+
+    if request.method != "POST":
+        return render(request, "mainpage/vk_dev_token.html")
+
+    raw = (request.POST.get("token") or "").strip()
+    if "access_token=" in raw:
+        raw = raw.split("access_token=", 1)[1]
+    raw = raw.split("&")[0].strip()
+    if not raw:
+        return render(request, "mainpage/vk_dev_token.html", {
+            "error": "Вставьте токен",
+        })
+
+    request.session["access_token"] = raw
+    ctx = {"access_token": raw, "error": None, "diag": {"debug_token": True}}
+    if has_attempt(request.user):
+        ctx["form"] = CampaignForm()
+    else:
+        ctx["error"] = "У вас нет доступных попыток. Обратитесь к администратору."
+    return render(request, "mainpage/vk_token.html", ctx)

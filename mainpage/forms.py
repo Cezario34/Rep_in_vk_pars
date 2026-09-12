@@ -1,5 +1,7 @@
 from django import forms
 from django.core.validators import URLValidator
+from urllib.parse import unquote
+import re
 
 STATUS_CHOICES = [
     ("new", "Новинка"),
@@ -18,13 +20,35 @@ DAY_CHOICES = [
     (50, "СЛР 2"),
 ]
 
+PHOTO_RE = re.compile(r"(photo-?\d+_\d+)")
+
+
+def extract_vk_photo(value: str) -> str:
+    text = unquote((value or "").strip())
+    if text.startswith("photo"):
+        match = PHOTO_RE.search(text)
+        if match:
+            return match.group(1)
+        raise ValueError("Не похоже на вложение photo-123_456")
+    match = PHOTO_RE.search(text)
+    if not match:
+        raise ValueError("В ссылке нет photo-123_456")
+    return match.group(1)
+
 
 class CampaignForm(forms.Form):
-    cover_url = forms.URLField(
-        label="Ссылка на обложку",
-        required=True,
-        widget=forms.URLInput(attrs={"class": "input"})
-    )
+    cover_url = forms.CharField(
+        label="Обложка VK",
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "input",
+                "placeholder": "ссылка на фото или photo-123_456",
+                }
+            ),
+        )
+
+
     author_name = forms.CharField(
         label="Имя автора",
         max_length=120,
@@ -68,3 +92,12 @@ class CampaignForm(forms.Form):
         if not url.startswith(("https://vk.cc/", "http://vk.cc/")):
             raise forms.ValidationError("Ожидается короткая ссылка формата https://vk.cc/…")
         return url
+
+    def clean_cover_url(self):
+        raw = self.cleaned_data.get("cover_url") or ""
+        if not raw.strip():
+            return ""
+        try:
+            return extract_vk_photo(raw)
+        except ValueError as exc:
+            raise forms.ValidationError(str(exc))

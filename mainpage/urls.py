@@ -12,6 +12,7 @@ urlpatterns = [
     path("progress/<str:job_id>/", views.send_progress, name="send_progress"),
     path("status/<str:job_id>/", views.send_status, name="send_status"),
     path("report/<str:job_id>/", views.send_report, name="send_report"),
+    path("dev-token/", views.vk_dev_token, name="vk_dev_token"),
     # ← новый
     # AJAX для сохранения verifier в сессию
 ]
