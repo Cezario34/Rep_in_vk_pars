@@ -33,7 +33,7 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"  # достаточно для top-level GET редиректа
 CSRF_TRUSTED_ORIGINS = ["https://ladaorfeeva.ru", "https://www.ladaorfeeva.ru"]
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'ladaorfeeva.ru', 'ladaorfeeva.shop']
 
