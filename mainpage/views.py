@@ -262,14 +262,21 @@ def send_status(request, job_id):
 
 @login_required
 def send_report(request, job_id):
-    job = get_job(job_id)
-    if not job or not job.get("report_name"):
-        return HttpResponse("Отчёт ещё не готов", status=404)
-    path = Path("group_target") / job["report_name"]
-    if not path.exists():
-        return HttpResponse("Файл не найден", status=404)
-    return FileResponse(path.open("rb"), as_attachment=True, filename=job["report_name"])
+    name = f"результат_{job_id}.xlsx"
+    path = Path("group_target") / name
 
+    job = get_job(job_id)
+    if job and job.get("report_name"):
+        path = Path("group_target") / job["report_name"]
+
+    if not path.exists():
+        return HttpResponse("Отчёт ещё не готов", status=404)
+
+    return FileResponse(
+        path.open("rb"),
+        as_attachment=True,
+        filename=path.name,
+    )
 
 @login_required
 def vk_dev_token(request):
