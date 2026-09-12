@@ -29,7 +29,7 @@ from sendonce.models import MailingLog
 
 # === настройки вашего приложения VK ID ===
 VK_APP_ID = getattr(settings, "VK_APP_ID", 54138257)  # подставьте свой
-VK_REDIRECT_URL = getattr(settings, "VK_REDIRECT_URL", "https://ladaorfeeva.ru/vkstart/vk-token/")
+VK_REDIRECT_URL = getattr(settings, "VK_REDIRECT_URL", "https://irisvels.ru/vkstart/vk-token/")
 # Эндпоинт обмена кода на токены. Для VK ID как правило oauth2/token:
 VK_TOKEN_URLS = [
     "https://id.vk.ru/oauth2/auth",

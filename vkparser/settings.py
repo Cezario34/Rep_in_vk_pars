@@ -16,7 +16,7 @@ import os
 VK_APP_ID       = os.getenv("VK_APP_ID")
 VK_SCOPE        = os.getenv("VK_SCOPE", "groups,wall,photos")
 VK_API_VERSION  = os.getenv("VK_API_VERSION", "5.199")
-VK_REDIRECT_URI = os.getenv("VK_REDIRECT_URL", "https://ladaorfeeva.ru/vkstart/vk-token/")
+VK_REDIRECT_URI = os.getenv("VK_REDIRECT_URL", "https://irisvels.ru/vkstart/vk-token/")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -31,11 +31,11 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 # 2) Безопасность/куки
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"  # достаточно для top-level GET редиректа
-CSRF_TRUSTED_ORIGINS = ["https://ladaorfeeva.ru", "https://www.ladaorfeeva.ru"]
+CSRF_TRUSTED_ORIGINS = ["https://irisvels.ru", "https://www.irisvels.ru"]
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'ladaorfeeva.ru', 'ladaorfeeva.shop']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'irisvels.ru', 'irisvels.shop']
 
 
 # Application definition
