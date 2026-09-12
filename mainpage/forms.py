@@ -17,7 +17,6 @@ DAY_CHOICES = [
     (10, "СЛР"),
     (50, "СЛР 2"),
 ]
-send_day = forms.TypedChoiceField(choices=DAY_CHOICES, coerce=int)
 
 
 class CampaignForm(forms.Form):
@@ -51,11 +50,12 @@ class CampaignForm(forms.Form):
         widget=forms.Textarea(attrs={"rows": 6, "placeholder": "Коротко о книге...", "class": "input"}),
         max_length=3000
     )
-    send_day = forms.ChoiceField(
+    send_day = forms.TypedChoiceField(
         label="Выбор дня для отправки",
         choices=DAY_CHOICES,
-        widget=forms.RadioSelect
-    )
+        coerce=int,
+        widget=forms.RadioSelect,
+        )
     vk_short_url = forms.CharField(
         label="Короткая ссылка ВК",
         required=True,

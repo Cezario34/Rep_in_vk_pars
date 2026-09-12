@@ -23,6 +23,7 @@ from django.utils.timezone import now
 from sendonce.logic import consume_attempt, has_attempt
 from mailing.jobs import start_mailing_job, get_job
 from mailing.post_text import build_post_text
+from pathlib import Path
 
 # === настройки вашего приложения VK ID ===
 VK_APP_ID = getattr(settings, "VK_APP_ID", 54138257)  # подставьте свой
