@@ -13,6 +13,7 @@ STATUS_CHOICES = [
 USER_DAYS = [
     (1, "День 1"),
     (2, "День 2"),
+    (10, "СЛР"),
 ]
 
 DAY_CHOICES = [
