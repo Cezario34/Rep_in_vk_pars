@@ -27,14 +27,7 @@ DAY_CHOICES = [
     (50, "СЛР 2"),
 ]
 
-age_rating = forms.ChoiceField(
-        label="Возрастной ценз",
-        choices=[
-            ("16+", "16+"),
-            ("18+", "18+"),
-        ],
-        widget=forms.Select(attrs={"class": "input"}),
-    )
+
 
 PHOTO_RE = re.compile(r"(photo-?\d+_\d+)")
 
@@ -81,6 +74,14 @@ class CampaignForm(forms.Form):
         max_length=120,
         widget=forms.TextInput(attrs={"placeholder": "Фэнтези / Детектив / ...", "class": "input"})
     )
+    age_rating = forms.ChoiceField(
+        label="Возрастной ценз",
+        choices=[
+            ("16+", "16+"),
+            ("18+", "18+"),
+            ],
+        widget=forms.Select(attrs={"class": "input"}),
+        )
     status = forms.ChoiceField(
         label="Статус",
         choices=STATUS_CHOICES,
