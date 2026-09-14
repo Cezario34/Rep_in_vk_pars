@@ -33,7 +33,7 @@ SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"  # достаточно для top-level GET редиректа
 CSRF_TRUSTED_ORIGINS = ["https://irisvels.ru", "https://www.irisvels.ru"]
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'irisvels.ru', 'irisvels.shop']
 
