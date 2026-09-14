@@ -27,6 +27,15 @@ DAY_CHOICES = [
     (50, "СЛР 2"),
 ]
 
+age_rating = forms.ChoiceField(
+        label="Возрастной ценз",
+        choices=[
+            ("16+", "16+"),
+            ("18+", "18+"),
+        ],
+        widget=forms.Select(attrs={"class": "input"}),
+    )
+
 PHOTO_RE = re.compile(r"(photo-?\d+_\d+)")
 
 

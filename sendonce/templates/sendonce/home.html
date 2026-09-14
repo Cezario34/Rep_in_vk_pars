@@ -52,7 +52,11 @@
       </div>
       <div class="note">Можно отписаться в любой момент одним кликом внутри сообщения.</div>
         <div class="cta">
-      <a class="btn" href="{% url 'vk_login' %}" target="_blank" rel="noopener">Перейти к отправке постов по группам</a>
+        {% if user.is_authenticated %}
+          <a class="btn" href="{% url 'vk_login' %}">Перейти к отправке постов по группам</a>
+        {% else %}
+          <a class="btn" href="{% url 'login' %}?next={% url 'vk_login' %}">Перейти к отправке постов по группам</a>
+        {% endif %}
         </div>
     </section>
 

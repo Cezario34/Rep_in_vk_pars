@@ -7,15 +7,12 @@
   <script src="https://unpkg.com/@vkid/sdk@2.6.1/dist-sdk/umd/index.js"></script>
   <style>
     body{font-family:system-ui,Arial,sans-serif;max-width:680px;margin:40px auto;padding:0 16px}
-    button{padding:10px 16px;border:0;border-radius:10px;cursor:pointer}
     #log{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;background:#f7f7f7;padding:12px;border-radius:8px;margin-top:12px}
   </style>
 </head>
 <body>
-  <h1>Войти через VK ID</h1>
-  <p>После авторизации вы вернётесь на страницу с токеном.</p>
-
-  <button id="vk_auth_btn">Войти через VK ID</button>
+  <h1>Вход в VK</h1>
+  <p>Сейчас откроется авторизация ВКонтакте…</p>
   <div id="log"></div>
 
   <script>
@@ -34,7 +31,6 @@
       const code_challenge = base64url(await sha256(code_verifier));
       const state = genRnd(32);
 
-      // 1) кладем verifier/state в СЕССИЮ (сервер)
       await fetch("/vkstart/vk-store-pkce/", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -46,12 +42,10 @@
     }
 
     (async function init(){
-      if (!window.VKIDSDK) { log("❌ VKIDSDK не найден"); return; }
+      if (!window.VKIDSDK) { log("VKIDSDK не найден"); return; }
       const VKID = window.VKIDSDK;
-      // log("✅ SDK OK, redirect flow");
 
       const { code_challenge, state } = await preparePkceOnServer();
-      // log("PKCE готово (server session):", { state, code_challenge: code_challenge.slice(0,10)+"…" });
 
       VKID.Config.init({
         app: APP_ID,
@@ -62,14 +56,8 @@
         responseMode: VKID.ConfigResponseMode.Redirect
       });
 
-      document.getElementById("vk_auth_btn").onclick = () => {
-        // log("Открываем VK ID (Redirect)…");
-        VKID.Auth.login(); // после логина вернет на REDIRECT
-      };
+      VKID.Auth.login();
     })();
   </script>
 </body>
 </html>
-
-
-
